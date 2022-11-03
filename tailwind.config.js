@@ -7,12 +7,16 @@ module.exports = {
   theme: {
     screens: {
       md: '640px',
+      mdFilters: '800px',
       lg: '1248px',
     },
     maxWidth: {
       '1200px': '1200px',
       '800px': '800px',
       '600px': '600px',
+    },
+    maxHeight: {
+      filters: 'calc(100vh - 144px)',
     },
     extend: {
       spacing: {

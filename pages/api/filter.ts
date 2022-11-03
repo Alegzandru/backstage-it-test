@@ -68,7 +68,7 @@ export default async function handler(
 
     res.status(200).json({
       products: productsPaginated,
-      pages: Math.trunc(products.length / 15) + 1,
+      pages: Math.trunc(products.length / 15) + (Number.isInteger(products.length / 15) ? 0 : 1),
     })
   } catch (error) {
     res.status(500).json({ error: 'Unexpected error occured' })
