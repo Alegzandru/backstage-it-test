@@ -2,6 +2,9 @@ import classNames from 'classnames'
 import { useCallback, useState } from 'react'
 import { Filters } from '../../types/general'
 import { useProducts } from '../../utils/useProducts'
+import { ColorsFilter } from '../Filters/ColorsFilter'
+import { PriceFilter } from '../Filters/PriceFilter'
+import { TagsFilter } from '../Filters/TagsFilter'
 import { ProductCard } from '../Product/Product'
 
 export const ProductMenu = ({filters}: {filters: Filters}) => {
@@ -9,14 +12,14 @@ export const ProductMenu = ({filters}: {filters: Filters}) => {
   const [activeFilters, setActiveFilters] = useState({
     colors: [] as string[],
     tags: [] as string[],
-    minPrice: 0,
-    maxPrice: 0,
+    minPrice: 0 as number | string,
+    maxPrice: 0 as number | string,
     page: 1,
   })
 
   const { products, pages, isLoading, error } = useProducts(activeFilters)
 
-  const toggleFilters = () => setFiltersOpen(!filtersOpen)
+  const toggleFilters = useCallback(() => setFiltersOpen(!filtersOpen), [setFiltersOpen, filtersOpen])
 
   const changeFilters = useCallback((key: string, value: string) => () => {
     if (activeFilters[key].includes(value)) {
@@ -33,106 +36,23 @@ export const ProductMenu = ({filters}: {filters: Filters}) => {
     }
   }, [activeFilters, setActiveFilters])
 
-  const incrementPage = () => {
+  const incrementPage = useCallback(() => {
     if (activeFilters.page < pages) {
       setActiveFilters((prevState) => ({
         ...prevState,
         page: prevState.page + 1,
       }))
     }
-  }
-  const decrementPage = () => {
+  }, [activeFilters.page, setActiveFilters, pages])
+
+  const decrementPage = useCallback(() => {
     if (activeFilters.page !== 1) {
       setActiveFilters((prevState) => ({
         ...prevState,
         page: prevState.page - 1,
       }))
     }
-  }
-
-  const renderColors = useCallback(() => (
-    <div className="flex justify-start items-center mb-8">
-      <div className="mr-4">COLORS:</div>
-      {filters.colors.map((color: string) => {
-        const newColor = color.toLocaleLowerCase()
-        return (
-          <div
-            key={color}
-            className="flex flex-col justify-center items-center"
-          >
-            <div
-              className={`group relative mx-0.5 rounded-full h-5 w-5 bg-ui${newColor} cursor-pointer`}
-              onClick={changeFilters('colors', color)}
-            >
-              <div className={classNames('absolute -top-8 -left-4 opacity-0 group-hover:opacity-100 transition-all',
-                '-translate-y-6 group-hover:translate-y-0')}
-              >
-                {color}
-              </div>
-            </div>
-            <div className={`w-1 p-1 rounded-full ${activeFilters.colors.includes(color) ? 'bg-black' : ''} mt-1`}/>
-          </div>
-        )
-      })}
-    </div>
-  ), [filters, changeFilters])
-
-  const renderPrice = useCallback(() => (
-    <div className="mb-8">
-      <div className="flex justify-start items-center">
-        <div className="mr-4">Price:</div>
-        <div className="mr-2">From</div>
-        <input
-          type="number"
-          id="min"
-          name="min"
-          min={filters.minPrice as number}
-          max={filters.maxPrice as number}
-          className="rounded outline outline-gray-300 mr-2 pl-1"
-          onChange={(e) => {
-            if (Number(e.target.value) > filters.minPrice) {
-              setActiveFilters({...activeFilters, minPrice: Number(e.target.value), page: 1})
-            }
-          }}
-          placeholder={`${activeFilters.minPrice}`}
-        />
-        <div className="mr-2">To</div>
-        <input
-          type="number"
-          id="max"
-          name="max"
-          min={filters.minPrice as number}
-          max={filters.maxPrice as number}
-          className="rounded outline outline-gray-300 mr-2 pl-1"
-          onChange={(e) => {
-            if (Number(e.target.value) < filters.maxPrice) {
-              setActiveFilters({...activeFilters, maxPrice: Number(e.target.value), page: 1})
-            }
-          }}
-          placeholder={`${activeFilters.maxPrice}`}
-        />
-      </div>
-      <div className="mt-1">Prices should be between €{filters.minPrice} and €{filters.maxPrice}</div>
-    </div>
-  ), [filters, activeFilters])
-
-  const renderTags = useCallback(() => (
-    <div className="flex justify-start items-center">
-      <div className="mr-4">CATEGORIES:</div>
-      <div className="w-full grid grid-cols-4 gap-2">
-        {filters.tags.map((tag: string) => (
-          <div
-            key={tag}
-            className={classNames(`border-2 ${activeFilters.tags.includes(tag) ?  'border-orange-200' : 'border-gray-300'} rounded text-center`,
-              'hover:bg-gray-50 transition-all cursor-pointer')}
-            onClick={changeFilters('tags', tag)}
-          >
-            {tag}
-          </div>
-        ))}
-      </div>
-    </div>
-  ), [filters, changeFilters])
+  }, [activeFilters.page, pages, setActiveFilters])
 
   const renderProducts = useCallback(() => {
     if (error) {
@@ -157,9 +77,22 @@ export const ProductMenu = ({filters}: {filters: Filters}) => {
         ? (
           <div className={classNames('fixed top-36 bg-white p-14 z-10 right-0 mdFilters:right-6 lg:right-spacing-lg w-full',
             'max-w-800px overflow-y-scroll max-h-filters')}>
-            {renderColors()}
-            {renderPrice()}
-            {renderTags()}
+            <ColorsFilter
+              colors={filters.colors}
+              activeColors={activeFilters.colors}
+              changeFilters={changeFilters}
+            />
+            <PriceFilter
+              maxPrice={filters.maxPrice}
+              minPrice={filters.minPrice}
+              activeFilters={activeFilters}
+              setActiveFilters={setActiveFilters}
+            />
+            <TagsFilter
+              tags={filters.tags}
+              activeTags={activeFilters.tags}
+              changeFilters={changeFilters}
+            />
           </div>
         )
         : null}
