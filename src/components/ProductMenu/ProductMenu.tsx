@@ -141,6 +141,9 @@ export const ProductMenu = ({filters}: {filters: Filters}) => {
     if (isLoading) {
       return 'Loading...'
     }
+    if (Array.isArray(products) && !products.length) {
+      return 'No products were found'
+    }
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 w-full gap-10 px-6 lg:px-0">
         {Array.isArray(products) && products.map(ProductCard)}
