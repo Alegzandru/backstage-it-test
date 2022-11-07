@@ -1,11 +1,12 @@
 import Head from 'next/head'
 import path from 'path'
 import fsPromises from 'fs/promises'
-import { Filters } from '../src/types/general'
+import { Filters, Products } from '../src/types/general'
 import { ProductMenu } from '../src/components/ProductMenu/ProductMenu'
 import { getFilters } from '../src/utils/getFilters'
+import { SWRConfig } from 'swr'
 
-export default function Home({filters}: {filters: Filters}) {
+export default function Home({filters, fallback}: {filters: Filters; fallback: Products}) {
   return (
     <div>
       <Head>
@@ -14,9 +15,11 @@ export default function Home({filters}: {filters: Filters}) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <ProductMenu
-        filters={filters}
-      />
+      <SWRConfig value={{ fallback }}>
+        <ProductMenu
+          filters={filters}
+        />
+      </SWRConfig>
     </div>
   )
 }
@@ -27,11 +30,15 @@ export async function getStaticProps() {
   const productsRaw = JSON.parse(jsonData.toString())
 
   const allProducts = productsRaw?.data?.allContentfulProductPage?.edges || []
+  const products = allProducts.slice(0, 15)
   const filters = getFilters(allProducts)
 
   return {
     props: {
       filters,
+      fallback: {
+        '/api/filter': products as Products,
+      },
     },
   }
 }
